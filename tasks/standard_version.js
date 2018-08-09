@@ -8,6 +8,7 @@
 
 'use strict';
 
+var standardVersion = require('standard-version');
 var DEFAULT_OPTIONS = {
   infile: 'CHANGELOG.md',
   message: 'chore(release): %s',
@@ -17,9 +18,7 @@ var DEFAULT_OPTIONS = {
   commitAll: false,
   silent: false,
   tagPrefix: 'v',
-  scripts: {
-    
-  },
+  scripts: {},
   skip: {},
   dryRun: false,
   files: []
@@ -28,7 +27,6 @@ var DEFAULT_OPTIONS = {
 module.exports = function(grunt) {
 
   grunt.registerMultiTask('standard_version', 'bump your package version and generate update CHANGELOG', function() {
-    grunt.registerMultiTask('standard_version', '', function () {
       var done = this.async();
       var options = this.options(DEFAULT_OPTIONS);
   
@@ -38,6 +36,5 @@ module.exports = function(grunt) {
         }
         done();
       });
-    });
   });
 };
