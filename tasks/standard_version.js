@@ -9,6 +9,8 @@
 'use strict';
 var exec = require('child_process').exec;
 var standardVersion = require('standard-version');
+var path = require('path');
+var pkg = path.resolve(process.cwd(), 'package.json');
 
 var DEFAULT_OPTIONS = {
   infile: 'CHANGELOG.md',
@@ -33,61 +35,59 @@ module.exports = function (grunt) {
     var opt = this.options(DEFAULT_OPTIONS);
 
     function push() {
+      var pkgVersion = require(pkg).version;
       var cmd;
+
       if (opt.push) {
-      if (opt.push === 'git' && !opt.pushTo) {
-        cmd = 'git push';
-        if (opt.dryRun) {
-          grunt.log.ok(cmd);
-        } else {
-          exec(cmd, function (err, stdout, stderr) {
-            if (err) {
-              grunt.fatal(
-                'Can not push to the git default settings:\n ' + stderr
-              );
-            }
-            grunt.log.ok('Pushed to the git default settings');
-          });
+        if (opt.push === 'git' && !opt.pushTo) {
+          cmd = 'git push';
+          if (opt.dryRun) {
+            grunt.log.ok(cmd);
+          } else {
+            exec(cmd, function (err, stdout, stderr) {
+              if (err) {
+                grunt.fatal(
+                  'Can not push to the git default settings:\n ' + stderr
+                );
+              }
+              grunt.log.ok('Pushed to the git default settings');
+            });
+          }
+
+          return;
         }
 
-        return;
+        exec('git rev-parse --abbrev-ref HEAD', function (err, stdout, stderr) {
+          if (err) {
+            grunt.fatal('Can not get ref for HEAD:\n' + stderr);
+          }
+
+          cmd = [];
+
+          if (opt.push === true || opt.push === 'branch') {
+            cmd.push('git push ' + opt.pushTo + ' ' + stdout.trim());
+          }
+
+          if (opt.push === true || opt.push === 'tag') {
+            var tagName = opt.tagPrefix + pkgVersion;
+            cmd.push('git push ' + opt.pushTo + ' ' + tagName);
+          }
+
+          cmd = cmd.join(' && ');
+          if (opt.dryRun) {
+            grunt.log.ok(cmd);
+          } else {
+            exec(cmd, function (err, stdout, stderr) {
+              if (err) {
+                grunt.fatal('Can not push to ' + opt.pushTo + ':\n  ' + stderr);
+              }
+
+              grunt.log.ok('Pushed to ' + opt.pushTo);
+            });
+          }
+        });
       }
-
-      exec('git rev-parse --abbrev-ref HEAD', function (err, stdout, stderr) {
-        if (err) {
-          grunt.fatal('Can not get ref for HEAD:\n' + stderr);
-        }
-
-        cmd = [];
-
-        if (opt.push === true || opt.push === 'branch') {
-          cmd.push('git push ' + opt.pushTo + ' ' + stdout.trim());
-        }
-
-        if (opt.push === true || opt.push === 'tag') {
-          exec('git describe --tags', function (err, stdout, stderr) {
-            if (err) {
-              grunt.fatal('Can not get the most recent tag from git' + stderr);
-            }
-            this.cmd.push('git push ' + opt.pushTo + ' ' + stdout.trim());
-          }.bind({cmd}));
-        }
-
-        cmd = cmd.join('&&');
-        if (opt.dryRun) {
-          grunt.log.ok(cmd);
-        } else {
-          exec(cmd, function (err, stdout, stderr) {
-            if (err) {
-              grunt.fatal('Can not push to ' + opt.pushTo + ':\n  ' + stderr);
-            }
-
-            grunt.log.ok('Pushed to ' + opt.pushTo);
-          });
-        }
-      });
     }
-  }
 
     function handleError(err) {
       grunt.log.error('standard-version failed with message: ' + err.message);
