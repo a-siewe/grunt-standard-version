@@ -1,7 +1,7 @@
 {
   "name": "grunt-standard-version",
   "description": "grunt.js plugin with automatic versioning and CHANGELOG generation using standard-version",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "homepage": "https://github.com/armel22/grunt-standard-version",
   "author": {
     "name": "Armel Siewe",
